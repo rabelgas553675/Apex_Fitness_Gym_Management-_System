@@ -5,6 +5,9 @@
 @section('content')
 
 @php
+  // Fallback so the page never crashes if the controller doesn't pass payments
+  $payments    = $payments ?? collect();
+
   $memberPhoto = $member->user?->photo ?? $member->photo ?? null;
   $isExpired   = $member->isExpired();
   $isExpiring  = $member->isDueWithinDays(7) && !$isExpired;
@@ -150,7 +153,7 @@
           <svg viewBox="0 0 24 24" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
           </svg>
-          Membership expired on {{ $member->end_date->format('M d, Y') }}.
+          Membership expired on {{ $member->end_date?->format('M d, Y') }}.
         </div>
       @elseif($isExpiring)
         <div class="notice notice-warning">
@@ -184,7 +187,7 @@
               <td class="receipt-id">{{ $p->receipt_number }}</td>
               <td>{{ $p->fitness_plan }} / {{ $p->membership_type }}</td>
               <td class="payment-amount">₱{{ number_format($p->amount, 2) }}</td>
-              <td class="payment-date">{{ $p->payment_date->format('M d, Y') }}</td>
+              <td class="payment-date">{{ $p->payment_date?->format('M d, Y') ?? '—' }}</td>
               <td>
                 <span class="payment-status"><span class="status-dot"></span>{{ $p->status }}</span>
               </td>

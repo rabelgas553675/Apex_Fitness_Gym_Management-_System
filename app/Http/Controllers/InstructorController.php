@@ -86,7 +86,13 @@ class InstructorController extends Controller
             abort(403, 'This member is not assigned to you.');
         }
 
-        return view('instructor.member-detail', compact('member'));
+        // Payment history for this member (this was missing, causing "Undefined variable $payments")
+        $payments = Payment::where('member_id', '=', $member->id, 'and')
+                           ->where('instructor_id', '=', $instructorId, 'and')
+                           ->orderByDesc('payment_date')
+                           ->get();
+
+        return view('instructor.member-detail', compact('member', 'payments'));
     }
 
     public function profile()
