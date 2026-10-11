@@ -158,31 +158,6 @@
     .empty-state .title { font-weight:600; margin-bottom:6px; }
     .empty-state .sub { font-size:13px; margin-bottom:16px; }
 
-    /* ── Modal ── */
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; padding:20px; }
-    .modal-overlay.active { display:flex; }
-    .modal { background:var(--surface); border:1px solid var(--accent); border-radius:16px; width:100%; max-width:640px; padding:28px; position:relative; max-height:90vh; overflow-y:auto; }
-    .modal-close { position:absolute; top:16px; right:16px; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1; }
-    .modal-close:hover { color:var(--accent); }
-    .modal-title { font-size:18px; font-weight:700; margin-bottom:4px; color:var(--accent); }
-    .modal-sub { font-size:13px; color:var(--muted); margin-bottom:20px; }
-    .modal-section-label { font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:12px; }
-    .modal-plan-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:20px; }
-    .modal-plan-option { cursor:pointer; display:block; }
-    .modal-plan-option input[type="radio"] { display:none; }
-    .modal-plan-card { border-radius:12px; padding:12px 8px; text-align:center; transition:border-color .18s, background .18s; position:relative; background:var(--surface2); border:1.5px solid var(--border); height:100%; box-sizing:border-box; }
-    .modal-plan-card:hover { border-color:rgba(224,169,59,0.4); }
-    .modal-plan-card .icon { width:32px; height:32px; margin:0 auto 8px; color:var(--muted); }
-    .modal-plan-card .icon svg { width:100%; height:100%; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-    .modal-plan-card .name { font-size:11px; font-weight:700; color:var(--text); line-height:1.3; }
-    .modal-plan-card .dot { position:absolute; top:7px; right:7px; width:7px; height:7px; border-radius:50%; background:var(--accent); display:none; }
-    .modal-plan-card.selected { border-color:var(--accent) !important; background:rgba(224,169,59,0.08) !important; }
-    .modal-plan-card.selected .icon { color:var(--accent); }
-    .modal-plan-card.selected .dot { display:block; }
-    .modal-actions { display:flex; gap:10px; }
-    .modal-actions .btn { flex:1; justify-content:center; padding:13px; }
-    .modal-actions .btn-secondary { flex:0 1 auto; padding:13px 20px; }
-
     /* ═══ Responsive ═══ */
     @media (max-width:900px) {
         .dashboard-container { padding:0 16px 32px; }
@@ -201,10 +176,6 @@
         .payment-item { flex-wrap:wrap; gap:10px; }
         .payment-left { flex:1 1 100%; }
         .payment-right { flex:1 1 100%; justify-content:flex-end; }
-        .modal { padding:22px 18px; max-width:95vw; }
-        .modal-plan-grid { grid-template-columns:repeat(3, 1fr); gap:8px; }
-        .modal-actions { flex-direction:column; }
-        .modal-actions .btn-secondary { flex:1; }
         .explore-banner .title { font-size:16px; }
         .explore-banner .sub { font-size:12.5px; }
     }
@@ -230,11 +201,6 @@
         .payment-info .plan { font-size:13px; }
         .payment-amount { font-size:14px; }
         .payment-status { font-size:11px; }
-        .modal { padding:18px 14px; }
-        .modal-title { font-size:16px; }
-        .modal-plan-grid { grid-template-columns:repeat(2, 1fr); gap:6px; }
-        .modal-plan-card { padding:10px 6px; }
-        .modal-actions .btn { font-size:13px; padding:10px; min-height:40px; }
         .explore-banner { padding:18px 16px; }
         .explore-banner .title { font-size:15px; }
         .explore-banner .btn-dark { font-size:13px; padding:10px 16px; min-height:42px; }
@@ -242,7 +208,6 @@
         .warning-banner .icon { font-size:16px; }
     }
     @media (max-width:360px) {
-        .modal-plan-card .name { font-size:9.5px; }
         .sub-plan .info .value { font-size:16px; }
         .sub-details { grid-template-columns:1fr; }
     }
@@ -434,15 +399,6 @@
                         </svg>
                         {{ $exp->dateExpired ? 'Renew Plan' : 'Change Plan' }}
                     </a>
-                    <button type="button" class="btn btn-secondary"
-                            onclick="document.getElementById('editSubModal').style.display='flex'"
-                            style="padding:8px 12px;display:flex;align-items:center;justify-content:center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                    </button>
                 </div>
 
             @else
@@ -604,98 +560,10 @@
 
 </div>
 
-{{-- ═══════════════════════════════════════════════
-     Edit Subscription Modal
-═══════════════════════════════════════════════ --}}
+{{-- Close handler for the "Advance Payment Recorded" banner --}}
 @if($member)
-<div class="modal-overlay" id="editSubModal">
-    <div class="modal">
-        <button onclick="document.getElementById('editSubModal').style.display='none'" class="modal-close">✕</button>
-
-        <div class="modal-title">Edit Subscription</div>
-        <div class="modal-sub">No charge will be made. Your coach must approve a plan change before it takes effect.</div>
-
-        @if(!empty($planRequest))
-            <div class="plan-request-box" style="margin-bottom:16px;">
-                <div class="row"><span>Current plan</span><strong>{{ $member->fitness_plan }}</strong></div>
-                <div class="row"><span>Requested plan</span><strong>{{ $planRequest->requested_plan }}</strong></div>
-                <span class="status">Pending Coach Approval</span>
-                <div class="note">You can cancel or follow this request on the Choose Your Plan page.</div>
-            </div>
-            <div class="modal-actions">
-                <a href="{{ route('member.select-plan') }}" class="btn btn-primary">View Request</a>
-                <button type="button" class="btn btn-secondary"
-                        onclick="document.getElementById('editSubModal').style.display='none'">Close</button>
-            </div>
-        @else
-        <form method="POST" action="{{ route('member.subscription.update') }}">
-            @csrf
-
-            {{-- ── 1. FITNESS PLAN ── --}}
-            <div class="modal-section-label">1. Fitness Plan</div>
-            <div class="modal-plan-grid">
-                @foreach($svgPlans as $planName => $planSvg)
-                    @php $isPlan = $member->fitness_plan === $planName; @endphp
-                    <label class="modal-plan-option">
-                        <input type="radio" name="fitness_plan" value="{{ $planName }}" {{ $isPlan ? 'checked' : '' }}/>
-                        <div class="modal-plan-card {{ $isPlan ? 'selected' : '' }}">
-                            <div class="icon">{!! $planSvg !!}</div>
-                            <div class="name">{{ $planName }}</div>
-                            <div class="dot"></div>
-                        </div>
-                    </label>
-                @endforeach
-            </div>
-
-            <div class="modal-section-label">Reason (optional)</div>
-            <textarea name="reason" maxlength="500" rows="2" placeholder="Tell your coach why you'd like this plan."
-                      style="width:100%;padding:10px 12px;border-radius:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);font:inherit;font-size:13px;margin-bottom:12px;"></textarea>
-
-            {{-- ── ACTIONS ── --}}
-            <div class="modal-actions">
-                <button type="submit" class="btn btn-primary">✓ Request Plan Change</button>
-                <button type="button" class="btn btn-secondary"
-                        onclick="document.getElementById('editSubModal').style.display='none'">Cancel</button>
-            </div>
-        </form>
-        @endif
-    </div>
-</div>
-
 <script>
     (function() {
-        // Radio → card selection handler
-        document.querySelectorAll('.modal-plan-option input[type="radio"]').forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                var parent = this.closest('.modal-plan-grid');
-                parent.querySelectorAll('.modal-plan-card').forEach(function(card) {
-                    card.classList.remove('selected');
-                });
-                if (this.checked) {
-                    var card = this.closest('.modal-plan-option').querySelector('.modal-plan-card');
-                    card.classList.add('selected');
-                }
-            });
-        });
-
-        // Close modal on backdrop click
-        var modal = document.getElementById('editSubModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) modal.style.display = 'none';
-            });
-        }
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                var modal = document.getElementById('editSubModal');
-                if (modal && modal.style.display === 'flex') {
-                    modal.style.display = 'none';
-                }
-            }
-        });
-
         var advanceBanner = document.querySelector('.advance-payment-banner');
         if (advanceBanner) {
             var advanceCloseButton = advanceBanner.querySelector('.close-advance-banner');
