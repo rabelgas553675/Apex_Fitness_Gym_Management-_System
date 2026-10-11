@@ -46,10 +46,18 @@
       --warning:  #fbbf24;
       --info:     #60a5fa;
       --radius:   14px;
+
+      /* Responsive sizing for the top bar (visual values are unchanged) */
+      --nav-h:  60px;
+      --nav-px: 36px;
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --safe-right:  env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left:   env(safe-area-inset-left, 0px);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
     body {
       background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 380px) fixed, var(--bg);
@@ -57,10 +65,16 @@
       font-family: 'DM Sans', sans-serif;
       font-size: 15px;
       min-height: 100vh;
+      min-height: 100dvh;           /* mobile browser toolbars: no jump */
       overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body.menu-open { overflow: hidden; }
+
+    /* Media never forces horizontal scroll on small screens */
+    img, svg, video, canvas { max-width: 100%; }
+    img, video { height: auto; }
 
     /* ── TOP NAVBAR ──
        backdrop-filter lives on ::before (NOT on .topnav) so the fixed mobile
@@ -71,11 +85,12 @@
       z-index: 100;
       background: rgba(20,21,24,0.92);
       border-bottom: 1px solid var(--border);
-      height: 60px;
+      height: calc(var(--nav-h) + var(--safe-top));
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 36px;
+      /* safe-area insets are 0 on normal screens, so nothing changes visually there */
+      padding: var(--safe-top) max(var(--nav-px), var(--safe-right)) 0 max(var(--nav-px), var(--safe-left));
       gap: 12px;
     }
     .topnav::before {
@@ -124,6 +139,7 @@
       display: flex;
       align-items: center;
       gap: 2px;
+      min-width: 0;
     }
 
     .nav-link {
@@ -270,6 +286,13 @@
       border-radius: 8px;
       cursor: pointer;
       flex-shrink: 0;
+      touch-action: manipulation;
+    }
+    /* Invisible extra hit area: the button looks the same but is easier to tap (44px) */
+    .topnav-toggle::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
     }
     .topnav-toggle svg { width: 20px; height: 20px; stroke: var(--text); fill: none; }
 
@@ -286,7 +309,7 @@
     .page-titlebar {
       background: rgba(0,0,0,0.25);
       border-bottom: 1px solid var(--border);
-      padding: 16px 36px;
+      padding: 16px max(36px, var(--safe-right)) 16px max(36px, var(--safe-left));
     }
     .page-titlebar h1 {
       font-size: 15px;
@@ -294,14 +317,26 @@
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--text);
+      overflow-wrap: anywhere;
     }
 
     /* ── PAGE CONTENT ── */
     .page-wrap {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 36px 36px;
+      padding: 36px max(36px, var(--safe-right)) calc(36px + var(--safe-bottom)) max(36px, var(--safe-left));
+      min-width: 0;
     }
+    .page-wrap > * { min-width: 0; }
+
+    /* Wide tables / code scroll inside their own box instead of breaking the page.
+       Wrap a table in <div class="table-responsive"> in your views where needed. */
+    .table-responsive, .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .page-wrap pre { max-width: 100%; overflow-x: auto; }
 
     /* ── ALERTS ── */
     .alert {
@@ -312,6 +347,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      overflow-wrap: anywhere;
     }
     .alert-success { background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); color: var(--success); }
     .alert-danger  { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--danger); }
@@ -331,6 +367,7 @@
       border: none;
       text-decoration: none;
       transition: all 0.15s;
+      touch-action: manipulation;
     }
     .btn-primary   { background: linear-gradient(135deg, var(--accent-2), var(--accent-dark)); color: #1a1a1a; }
     .btn-primary:hover  { filter: brightness(1.08); transform: translateY(-1px); }
@@ -368,16 +405,16 @@
        ══════════════════════════════════════════════ */
 
     @media (max-width: 1024px) {
-      .topnav { padding: 0 20px; }
+      :root { --nav-px: 20px; }
       .topnav-links { gap: 0; }
       .nav-link { padding: 8px 10px; font-size: 13px; }
-      .page-titlebar { padding: 14px 20px; }
-      .page-wrap { padding: 28px 20px; }
+      .page-titlebar { padding: 14px max(20px, var(--safe-right)) 14px max(20px, var(--safe-left)); }
+      .page-wrap { padding: 28px max(20px, var(--safe-right)) calc(28px + var(--safe-bottom)) max(20px, var(--safe-left)); }
     }
 
     /* Mobile (≤860px): collapse nav links into a hamburger drawer */
     @media (max-width: 860px) {
-      .topnav { height: 56px; }
+      :root { --nav-h: 56px; }
       .topnav-brand { flex: 1 1 auto; }
       .topnav-name { font-size: 13px; }
 
@@ -399,7 +436,8 @@
         align-items: stretch;
         justify-content: flex-start;
         gap: 3px;
-        padding: 0 14px 20px;
+        /* safe-area padding only matters on notched phones; elsewhere it equals the old 0 14px 20px */
+        padding: var(--safe-top) max(14px, var(--safe-right)) calc(20px + var(--safe-bottom)) 14px;
         transform: translateX(100%);
         visibility: hidden;
         transition: transform 0.25s ease, visibility 0s linear 0.25s;
@@ -425,7 +463,7 @@
         align-items: center;
         gap: 10px;
         flex-shrink: 0;
-        min-height: 56px;
+        min-height: var(--nav-h);
         padding: 0 54px 0 6px;
         margin-bottom: 10px;
         border-bottom: 1px solid rgba(255,255,255,0.09);
@@ -456,22 +494,27 @@
       .btn-logout { padding: 8px; width: 38px; height: 38px; justify-content: center; }
       .btn-logout span { display: none; }
 
-      .page-wrap { padding: 20px 14px; }
+      .page-titlebar h1 { font-size: clamp(13px, 3.6vw, 15px); letter-spacing: clamp(1px, 0.4vw, 2px); }
+      .page-wrap { padding: 20px max(14px, var(--safe-right)) calc(20px + var(--safe-bottom)) max(14px, var(--safe-left)); }
+
+      /* Comfortable touch targets for page content */
+      .btn { min-height: 40px; }
+      .btn-sm { min-height: 34px; }
     }
 
     /* Small phones (≤480px): logout moves into the drawer */
     @media (max-width: 480px) {
-      .topnav { padding: 0 12px; height: 52px; gap: 6px; }
+      :root { --nav-h: 52px; --nav-px: 12px; }
+      .topnav { gap: 6px; }
       .topnav-brand { gap: 7px; }
       .topnav-name { font-size: 11.5px; letter-spacing: 1.2px; }
       .topnav-logo { width: 28px; height: 28px; }
       .topnav-links { width: 84vw; max-width: 320px; }
-      .nav-brand-head { min-height: 52px; }
-      .nav-brand-head .topnav-name { font-size: 12px; letter-spacing: 1.5px; }
       .topnav-right { gap: 6px; }
       .topnav-logout-form { display: none; }
-      .page-titlebar { padding: 12px 12px; }
-      .page-wrap { padding: 14px 10px; }
+      .nav-brand-head .topnav-name { font-size: 12px; letter-spacing: 1.5px; }
+      .page-titlebar { padding: 12px max(12px, var(--safe-right)) 12px max(12px, var(--safe-left)); }
+      .page-wrap { padding: 14px max(10px, var(--safe-right)) calc(14px + var(--safe-bottom)) max(10px, var(--safe-left)); }
 
       .nav-account {
         display: flex;
@@ -494,6 +537,18 @@
     }
     @media (max-width: 340px) {
       .topnav-name { font-size: 10px; letter-spacing: .6px; }
+    }
+
+    /* Phones in landscape: short screens, keep the drawer scrollable and compact */
+    @media (max-width: 860px) and (max-height: 480px) {
+      .nav-link { padding-top: 10px; padding-bottom: 10px; }
+    }
+
+    /* No drawer slide-flash while the window is being resized / rotated */
+    .nav-resizing .topnav-links { transition: none !important; }
+    @media (prefers-reduced-motion: reduce) {
+      .topnav-links { transition: none !important; }
+      html { scroll-behavior: auto; }
     }
 
     /* ═══════════════════════════════════════════════════════════════
@@ -792,33 +847,72 @@
 
 <script>
   (function () {
-    var toggle  = document.getElementById('topnavToggle');
-    var links   = document.getElementById('topnavLinks');
-    var overlay = document.getElementById('topnavOverlay');
+    var toggle    = document.getElementById('topnavToggle');
+    var links     = document.getElementById('topnavLinks');
+    var overlay   = document.getElementById('topnavOverlay');
     var iconOpen  = document.getElementById('navIconOpen');
     var iconClose = document.getElementById('navIconClose');
+    var mq        = window.matchMedia('(max-width: 860px)');
 
-    function setOpen(open) {
+    function isOpen() { return links.classList.contains('open'); }
+
+    function setOpen(open, restoreFocus) {
+      if (open && !mq.matches) return;            // the drawer only exists on mobile
       links.classList.toggle('open', open);
       overlay.classList.toggle('open', open);
       document.body.classList.toggle('menu-open', open);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      iconOpen.style.display = open ? 'none' : '';
+      iconOpen.style.display  = open ? 'none' : '';
       iconClose.style.display = open ? '' : 'none';
+
+      if (open) {
+        var first = links.querySelector('.nav-link');
+        if (first) first.focus({ preventScroll: true });
+      } else if (restoreFocus) {
+        toggle.focus({ preventScroll: true });
+      }
     }
 
-    toggle.addEventListener('click', function () {
-      setOpen(!links.classList.contains('open'));
-    });
-    overlay.addEventListener('click', function () { setOpen(false); });
+    toggle.addEventListener('click', function () { setOpen(!isOpen(), true); });
+    overlay.addEventListener('click', function () { setOpen(false, true); });
+
     links.querySelectorAll('.nav-link, .nav-account-name').forEach(function (link) {
-      link.addEventListener('click', function () { setOpen(false); });
+      link.addEventListener('click', function () { setOpen(false, false); });
     });
+
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') setOpen(false);
+      if (!isOpen()) return;
+
+      if (e.key === 'Escape') { setOpen(false, true); return; }
+
+      // Keep Tab focus inside the open drawer (plus the close button)
+      if (e.key === 'Tab') {
+        var items = Array.prototype.slice.call(
+          links.querySelectorAll('a[href], button:not([disabled])')
+        ).filter(function (el) { return el.offsetParent !== null; });
+        items.push(toggle);
+        var firstEl = items[0], lastEl = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === firstEl) {
+          e.preventDefault(); lastEl.focus();
+        } else if (!e.shiftKey && document.activeElement === lastEl) {
+          e.preventDefault(); firstEl.focus();
+        }
+      }
     });
+
+    // Close automatically when the viewport grows past the mobile breakpoint (rotate / resize)
+    var onBreakpoint = function (e) { if (!e.matches) setOpen(false, false); };
+    if (mq.addEventListener) mq.addEventListener('change', onBreakpoint);
+    else mq.addListener(onBreakpoint);
+
+    // Suppress the slide animation while resizing so the drawer never flashes
+    var resizeTimer;
     window.addEventListener('resize', function () {
-      if (window.innerWidth > 860) setOpen(false);
+      document.body.classList.add('nav-resizing');
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        document.body.classList.remove('nav-resizing');
+      }, 150);
     });
   })();
 </script>
