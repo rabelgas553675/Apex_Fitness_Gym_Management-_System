@@ -264,6 +264,13 @@
         object-fit: contain;
     }
 
+    /* Inline SVG QR code (generated on the fly, no stored files) */
+    .qr-image-wrapper svg {
+        width: 92%;
+        height: 92%;
+        display: block;
+    }
+
     .qr-card-name {
         font-weight: 800;
         font-size: 18px;
@@ -582,12 +589,32 @@
                         $label = strtoupper($item->membership_type);
                     }
                 }
+
+                // ── Value encoded in the QR (must match AttendanceController@processQr) ──
+                //  Members : their qr_id (IFG-MEM-000001), or APEX|MBR|id|token as a fallback
+                //  Staff   : APEX|ROLE|user_id|token
+                $qrValue = null;
+                if ($item->qr_token) {
+                    if ($isStaffGroup) {
+                        $qrValue = 'APEX|' . strtoupper($rawRole) . '|' . $item->user_id . '|' . $item->qr_token;
+                    } else {
+                        $qrValue = !empty($item->qr_id)
+                            ? $item->qr_id
+                            : 'APEX|MBR|' . $item->id . '|' . $item->qr_token;
+                    }
+                }
             @endphp
 
             <div class="qr-card">
-                <div class="qr-image-wrapper">
-                    @if($item->qr_code_path)
-                        <img src="{{ asset('storage/' . $item->qr_code_path) }}" alt="QR Code for {{ $name }}" loading="lazy" style="background:#fff;padding:10px;border-radius:8px"/>
+                <div class="qr-image-wrapper" role="img" aria-label="QR Code for {{ $name }}">
+                    {{-- Generated on the fly as inline SVG, so it never depends on files
+                         in storage (which Railway wipes on every redeploy). --}}
+                    @if($qrValue)
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                            ->size(160)
+                            ->margin(1)
+                            ->errorCorrection('M')
+                            ->generate($qrValue) !!}
                     @else
                         <div style="color:#6f6a5e; font-size:12px; text-align:center; padding:10px;">
                             No QR<br>Generated
@@ -612,7 +639,8 @@
                 @endif
 
                 @php
-                    $printRoute = $isStaffGroup ? route('users.qr.print', $item) : route('members.qr.print', $item);
+                    // Staff cards are UserQrToken rows; the print route needs the USER id.
+                    $printRoute = $isStaffGroup ? route('users.qr.print', $item->user_id) : route('members.qr.print', $item);
                 @endphp
                 <a href="{{ $printRoute }}" class="btn btn-print" style="margin-top:14px;width:100%;justify-content:center;">🖨️ Print QR</a>
             </div>
