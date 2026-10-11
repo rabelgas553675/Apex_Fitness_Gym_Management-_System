@@ -26,6 +26,22 @@
         border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
     }
 
+    /* White box that holds the inline SVG QR code */
+    .qr-box {
+        width: 100%;
+        max-width: 196px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 8px;
+        border-radius: 8px;
+        line-height: 0;
+    }
+    .qr-box svg {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
     .badge-role {
         font-size: 10px;
         font-weight: 800;
@@ -223,10 +239,17 @@
 
         <div class="qr-card">
             <div style="margin-bottom:15px;">
-                @if($item->qr_code_path)
-                    <img src="{{ asset('storage/' . $item->qr_code_path) }}"
-                         alt="QR Code for {{ $name }}" loading="lazy"
-                         style="width:100%; max-width:180px; height:auto; display:block; margin:0 auto; background:#fff; padding:8px; border-radius:8px;">
+                {{-- QR is generated on the fly as inline SVG (no stored files),
+                     so it survives Railway redeploys. It encodes the same
+                     qr_token the scanner reads. --}}
+                @if($item->qr_token)
+                    <div class="qr-box" role="img" aria-label="QR Code for {{ $name }}">
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                            ->size(180)
+                            ->margin(1)
+                            ->errorCorrection('M')
+                            ->generate($item->qr_token) !!}
+                    </div>
                 @else
                     <div style="width:180px; height:180px; background:var(--surface2); margin:0 auto; display:flex; align-items:center; justify-content:center; color:var(--muted); border-radius:10px; font-size:12px; border:2px dashed var(--border);">
                         No QR Code
